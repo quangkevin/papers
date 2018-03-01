@@ -1,13 +1,28 @@
 \documentclass{article}
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
 \usepackage{pgf,tikz}
-\title{Principal Component Analysis (PCA)}
+
+\title{Principal Component Analysis (PCA) \\ Machine Learning Group}
 \date{2018-02-21}
 \author{Kevin Nguyen, MatchCraft LLC}
 
 \begin{document}
 \maketitle
+
+\begin{algorithm}
+  \caption{Calculate PCA}
+  \begin{algorithmic}
+    \State $X \gets [x_1, x_2, \dots, x_n]_{d \times n}$ \Comment{Dataset}
+    \State $\mu \gets Mean(X)$ \Comment{Find the mean of each dimension}
+    \State $X \gets X - \mu$ \Comment{Shift each point to center around the mean}
+    \State $S \gets Cov(X,X)$ \Comment{Find the covariance matrix of X}
+    \State $[U,\lambda] \gets eig(S)$ \Comment{principal component vectors and variance}
+  \end{algorithmic}
+\end{algorithm}
+
 
 \section{Matrix}
 \subsection{Definition}
@@ -51,15 +66,17 @@ X^T =
 = (x_{ji}) \in \mathbb{R}^{n \times d}
 $$
 
+\newpage
+
 \subsection{Matrix Multiplication}
 If X is d x n matrix and Y is n x m matrix, then XY is d x m matrix. $XY_{ij}$ is the value of row i column j of matrix XY.
 
 $$XY_{ij} = x_{i1}y_{1j} + x_{i2}y_{2j} + x_{i3}y_{3j} + \dots x_{in}y_{nj} = \sum_{k=1}^{n}x_{ik}y_{kj}$$
 
 $$
-S
-= XX^T
-=
+S = 
+\frac{1}{n}XX^T
+=\frac{1}{n}
 \begin{bmatrix}
   x_{11} & x_{12} & \dots & x_{1n} \\
   x_{21} & x_{22} & \dots & x_{2n} \\
@@ -98,7 +115,15 @@ Let \textbf{x} and \textbf{u} vector vector of d dimension. The projection of \t
     $$
     \begin{aligned}
       \mathbf{x} \cdot \mathbf{u} &= \left \| \mathbf{x} \right \| \left \| \mathbf{u} \right \| \cos \theta \\
-      &= x_1 u_1 + x_2 u_2 + \dots + x_d u_d \\        
+      &= x_1 u_1 + x_2 u_2 + \dots + x_d u_d \\
+      &= u_1 x_1 + u_2 x_2 + \dots + u_d x_d \\      
+      &=
+      \begin{pmatrix}
+        u_1 & u_2 &  \dots & u_d \\
+      \end{pmatrix}
+      \begin{pmatrix}
+        x_1 \\ x_2 \\ \vdots \\ x_d \\
+      \end{pmatrix} \\
       &= U^{T}X
     \end{aligned}
     $$
@@ -108,34 +133,79 @@ Let \textbf{x} and \textbf{u} vector vector of d dimension. The projection of \t
 
 \section{Lagrange Multipliers}
 
-\section{Variance}
+\section{Statistics}
 \subsection{Variance}
 
-Let X be a dataset of size n:
+Let X be a dataset of size n.
 
 $$X = [x_1, x_2, ..., x_n]$$
 
-Mean of X is
+Mean of X
+
 $$E[X] = \mu = \frac{1}{n}\sum_{i=1}^{n}x_i$$
+
 Variance of X is the average of square distance from the mean.
+
 $$Var(X) = \sigma^2 = \frac{1}{n}\sum_{i=1}^{n} (x_i - \mu)^2$$
 
-If we shift X to center around its mean then
+Shift X to center around its mean
 
 $$Var(X)
+= \sigma^2
 = \frac{1}{n}\sum_{i=1}^{n}(x_i)^2
-=
+= \frac{1}{n}
 \begin{pmatrix}
-  x_1 & x_2 & x_3 & \dots & x_n \\
+  x_1 & x_2 &  \dots & x_n \\
 \end{pmatrix}
 \begin{pmatrix}
-  x_1 \\ x_2 \\ x_3 \\ \vdots x_n\\
+  x_1 \\ x_2 \\ \vdots \\ x_n \\
 \end{pmatrix}
-= \mathbf{XX}^T
+= \frac{1}{n}XX^T
 $$
 
-\section{Intuition}
-Let X be a dataset of size n:
-$$ X = [\mathbf{x}_1, \mathbf{x}_2, ..., \mathbf{x}_n] where \mathbf{x}  $$
+\begin{algorithm}
+  \caption{Derivation of PCA}
+  \begin{algorithmic}
+    \State $X \gets
+    \begin{bmatrix}
+      x_{11} & x_{12} & x_{13} & \dots & x_{1n} \\
+      x_{21} & x_{22} & x_{13} & \dots & x_{2n} \\
+      \vdots & \vdots & \vdots & \ddots & \vdots \\
+      x_{d1} & x_{d2} & x_{d3} & \dots & x_{dn} \\
+    \end{bmatrix}$
+    , $U
+    \gets \begin{bmatrix}
+      u_1 \\
+      u_2 \\
+      \vdots \\
+      u_d \\
+    \end{bmatrix}$ 
+    \State \\
+    \State $f \gets Var(U^T X)$ \Comment{Maximize variance}
+    \State \\
+    \State $g \gets U^{T}U - 1 = 0$ \Comment{Constraint}
+    
+    $$\operatorname{argmax}_{u_1, u_2, \dots, u_d} f \text{ subject to } g$$
 
+    $$
+    \begin{aligned}
+      f &= Var(U^T X) \\
+      &= \frac{1}{n}(U^T X)(U^T X)^T \text{ because } Var(X) = \frac{1}{n} XX^T \\
+      &= \frac{1}{n}(U^T X)(X^T U) \text{ because } (AB)^T = B^T A^T \\
+      &= \frac{1}{n}U^T X X^T U \\
+      &= U^{T}SU \text{ where } S = Cov(X,X) = \frac{1}{n}X X^T \\
+      \nabla_\mathbf{u} f &= \lambda \nabla_\mathbf{u} g \text{ for some } \lambda \\
+      \nabla_\mathbf{u} U^{T}SU &= \lambda \nabla_\mathbf{u} (U^{T}U - 1) \\
+      2SU &= 2\lambda U \\
+      SU &= \lambda U \implies \text{ Definition of Eigenvalues and Eigenvectors}\\
+      \\
+      f &= Var(U^T X) \\
+      &= U^{T}SU \\
+      &= U^{T} (\lambda U) \\
+      &= \lambda U^T U \\ 
+      &= \lambda
+    \end{aligned}
+    $$
+  \end{algorithmic}
+  \end{algorithm}
 \end{document}
